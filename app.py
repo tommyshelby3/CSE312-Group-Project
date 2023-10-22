@@ -4,6 +4,8 @@ from pymongo import MongoClient
 import database as db
 import bcrypt
 
+from database import create_post, get_posts                 #! Post functions
+
 app = Flask(__name__)
 
 
@@ -46,6 +48,30 @@ def register():
         hashpassword = bcrypt.hashpw(password.encode('utf-8'), salt)
         db.register_user(username, hashpassword, salt)
         return jsonify({'success' : 'user created'}), 200
+
+
+#!__________________________________________ POSTS ____________________________________________!#
+
+@app.route('/post', methods=['POST'])
+def create_post_route():
+    username = request.form['username']
+    title = request.form['title']                   
+    description = request.form['description']      
+    
+    if not (username and title and description):        #! checks if all fields are filled
+        return jsonify({'error': 'Missing data'}), 400
+    
+    create_post(username, title, description)           #! creates a post
+    return jsonify({'success': True})                   #! returns a json string
+
+
+
+@app.route('/posts', methods=['GET'])
+def fetch_posts():
+    posts = get_posts()                                 #! gets all posts   
+    return jsonify(posts), 200
+
+#!__________________________________________ POSTS Ending ____________________________________________!#
 
 
 
