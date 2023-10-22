@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, make_response
 import secrets
 from pymongo import MongoClient
 import database as db
@@ -11,7 +11,17 @@ app = Flask(__name__)
 
 @app.route("/")
 def index():
-    return render_template("index.html")
+    auth = request.cookies.get('auth')
+    if auth is None:
+        return render_template("index.html", username = "Guest")
+    else:
+        user = db.client_users.find_one({'auth':auth})
+        print(user)
+        if user is None:
+            return redirect(url_for('login'))
+        else:
+            return render_template("index.html", username=user['username'])
+        
 
 
 @app.route('/login', methods=['GET','POST'])
@@ -27,8 +37,10 @@ def login():
             return jsonify({'error' : 'invalid username'}), 400
         if bcrypt.hashpw(password.encode('utf-8'), user['salt']) == user['password']:
             auth = secrets.token_hex(16)
-            db.client_users["auth"] = auth
-            return redirect(url_for('index'))
+            db.client_users.update_one({'username':username}, {"$set": {'auth':auth}})
+            response = make_response(redirect(url_for('index')))
+            response.set_cookie('auth', auth)
+            return response
         else:
             return jsonify({'error' : 'invalid password'}), 400
     
@@ -47,7 +59,7 @@ def register():
         salt = bcrypt.gensalt()
         hashpassword = bcrypt.hashpw(password.encode('utf-8'), salt)
         db.register_user(username, hashpassword, salt)
-        return jsonify({'success' : 'user created'}), 200
+        return redirect(url_for('index'))
 
 
 #!__________________________________________ POSTS ____________________________________________!#
@@ -77,4 +89,4 @@ def fetch_posts():
 
 
 if __name__ == "__main__":
-    app.run(host="localhost", port=8080, debug=True)
+    app.run(host="0.0.0.0", port=8080, debug=True)
