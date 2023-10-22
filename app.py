@@ -39,7 +39,7 @@ def login():
             auth = secrets.token_hex(16)
             db.client_users.update_one({'username':username}, {"$set": {'auth':auth}})
             response = make_response(redirect(url_for('index')))
-            response.set_cookie('auth', auth)
+            response.set_cookie('auth', auth, httponly = True, max_age = 3600)
             return response
         else:
             return jsonify({'error' : 'invalid password'}), 400
