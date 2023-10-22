@@ -31,3 +31,16 @@ def register_user(username, password, salt):
     }
     client_users.insert_one(new_user)
 
+def create_post(username, title, description):              #! creates a post
+    post_data = {
+        'username': username,
+        'title': title,
+        'description': description,
+        'likes': 0,
+        '_id': get_next_id()
+    }
+    client_posts.insert_one(post_data)                      #! inserts post into database
+    
+def get_posts():                                            #! gets all posts   
+    posts = list(client_posts.find({}, {"_id": 0}))         #! returns a list of posts
+    return posts
