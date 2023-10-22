@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home Page</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            fetchPosts();                       // Fetch all posts on page load
+
+            // Handle post creation
+            $('#createPostForm').submit(function (e) {
+                e.preventDefault();
+                $.post("/post", $(this).serialize(), function (data) {
+                    if (data.success) {
+                        alert('Post created successfully!');
+                        fetchPosts();
+                    } else {
+                        alert(data.error);
+                    }
+                });
+            });
+        });
+
+        function fetchPosts() {                     
+            $.get("/posts", function (data) {
+                let postsHtml = '';
+                data.forEach(post => {
+                    postsHtml += `<h2>${post.title}</h2>`;
+                    postsHtml += `<p>By: ${post.username}</p>`;
+                    postsHtml += `<p>${post.description}</p>`;
+                    postsHtml += '<hr>';
+                });
+                $('#postsContainer').html(postsHtml);
+            });
+        }
+    </script>
+</head>
+
+<body>
+    <h1>UniMarket</h1>
+    <p>
+        <a href="{{ url_for('login') }}">Login</a> or <a href="{{ url_for('register') }}">Register</a>
+    </p>
+
+    <h2>Create a Post</h2>
+    <form id="createPostForm">
+        <label for="usernamePost">Username:</label>
+        <input type="text" id="usernamePost" name="username" required><br><br>
+
+        <label for="titlePost">Title:</label>
+        <input type="text" id="titlePost" name="title" required><br><br>
+
+        <label for="descriptionPost">Description:</label>
+        <textarea id="descriptionPost" name="description" required></textarea><br><br>
+
+        <input type="submit" value="Post">
+    </form>
+
+    <h2>Posts:</h2>
+    <div id="postsContainer">
+        <!-- all the post should show up here for now  ||  we need to add css design to it -->
+    </div>
+</body>
+
+</html>
