@@ -11,6 +11,7 @@
             fetchPosts();                       // Fetch all posts on page load
 
             // Handle post creation
+            //setInterval(fetchPosts, 5000)
             $('#createPostForm').submit(function (e) {
                 e.preventDefault();
                 $.post("/post", $(this).serialize(), function (data) {

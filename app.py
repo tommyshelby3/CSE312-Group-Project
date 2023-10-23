@@ -3,7 +3,7 @@ import secrets
 from pymongo import MongoClient
 import database as db
 import bcrypt
-
+from html import escape
 from database import create_post, get_posts                 #! Post functions
 
 app = Flask(__name__)
@@ -66,13 +66,20 @@ def register():
 
 @app.route('/post', methods=['POST'])
 def create_post_route():
-    username = request.form['username']
+    user = db.client_users.find_one({'auth' : auth})
+    if not user:
+        return jsonify({'error' : 'Invalid User'}), 400
+    username = user['username']
     title = request.form['title']                   
     description = request.form['description']      
     
-    if not (username and title and description):        #! checks if all fields are filled
-        return jsonify({'error': 'Missing data'}), 400
-    
+    auth = request.cookies.get('auth')
+    if not auth or db.client_users.find_one({'auth': auth}) is None:
+        return jsonify({'error': 'Log in to create a post'}), 403
+    title = escape(request.form['title'])
+    username = escape(request.form['username'])
+    description = escape(request.form['description'])
+
     create_post(username, title, description)           #! creates a post
     return jsonify({'success': True})                   #! returns a json string
 
