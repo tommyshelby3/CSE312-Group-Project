@@ -35,8 +35,9 @@ def create_post(username, title, description):              #! creates a post
         'username': username,
         'title': title,
         'description': description,
-        'likes': 0,
-        '_id': get_next_id()
+        'likes': 0,  # Number of likes
+        'users_liked': [],  # List of users who have liked the post
+        '_id': get_next_id()  # Function to get the next post ID
     }
     client_posts.insert_one(post_data)                      #! inserts post into database
     

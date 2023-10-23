@@ -88,10 +88,37 @@ def update_like(post_id):
     auth = request.cookies.get('auth')
     if not auth:
         return jsonify({'error': 'Log in to like a post'}), 403
+
     user = db.client_users.find_one({'auth': auth})
     if not user:
         return jsonify({'error': 'Invalid authentication token'}), 400
-    db.client_posts.update_one({'_id': post_id}, {'$inc': {'likes': 1}})
+
+    # Check if the post exists
+    post = db.client_posts.find_one({'_id': post_id})
+    if not post:
+        return jsonify({'error': 'Post not found'}), 404
+
+    username = user['username']  # unique identifier for the user in this case
+
+    if username in post.get('users_liked', []):
+        # User has already liked the post, so we unlike it
+        db.client_posts.update_one(
+            {'_id': post_id},
+            {
+                '$pull': {'users_liked': username},  # remove user from the likes
+                '$inc': {'likes': -1}  # decrease the like count
+            }
+        )
+    else:
+        # User hasn't liked the post yet, so we add their like
+        db.client_posts.update_one(
+            {'_id': post_id},
+            {
+                '$push': {'users_liked': username},  # add user to the likes
+                '$inc': {'likes': 1}  # increase the like count
+            }
+        )
+
     return jsonify({'success': True})
 
 #!__________________________________________ POSTS Ending ____________________________________________!#
