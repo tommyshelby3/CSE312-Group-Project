@@ -66,33 +66,33 @@ def register():
 
 @app.route('/post', methods=['POST'])
 def create_post_route():
-
     auth = request.cookies.get('auth')
-    
     if not auth:
         return jsonify({'error': 'Log in to create a post'}), 403
-
     user = db.client_users.find_one({'auth': auth})
     if not user:
         return jsonify({'error': 'Invalid authentication token'}), 400
-    
-
     username = escape(user['username'])
     title = escape(request.form['title'])
     description = escape(request.form['description'])
-
-    # Create the post using the sanitized data
     create_post(username, title, description)
-
     return jsonify({'success': True})
-
-
-
 
 @app.route('/posts', methods=['GET'])
 def fetch_posts():
     posts = get_posts()                                 #! gets all posts   
     return jsonify(posts), 200
+
+@app.route('/posts/like/<int:post_id>', methods=['POST'])
+def update_like(post_id):
+    auth = request.cookies.get('auth')
+    if not auth:
+        return jsonify({'error': 'Log in to like a post'}), 403
+    user = db.client_users.find_one({'auth': auth})
+    if not user:
+        return jsonify({'error': 'Invalid authentication token'}), 400
+    db.client_posts.update_one({'_id': post_id}, {'$inc': {'likes': 1}})
+    return jsonify({'success': True})
 
 #!__________________________________________ POSTS Ending ____________________________________________!#
 

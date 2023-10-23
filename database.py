@@ -7,7 +7,6 @@ database = client['CSE312-Group-Project']
 client_users = database['users']
 client_posts = database['posts']
 client_comments = database['comments']
-client_likes = database['likes']
 client_id = database['id']
 
 def get_next_id():
@@ -42,5 +41,5 @@ def create_post(username, title, description):              #! creates a post
     client_posts.insert_one(post_data)                      #! inserts post into database
     
 def get_posts():                                            #! gets all posts   
-    posts = list(client_posts.find({}, {"_id": 0}))         #! returns a list of posts
+    posts = list(client_posts.find({}))         #! returns a list of posts
     return posts

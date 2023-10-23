@@ -1,15 +1,7 @@
 function addLikeEventListeners() {
-    // This selects all buttons with the class 'like-btn' and attaches a click event listener to them.
-    $('.like-btn').on('click', function() {
-        // Retrieve the post ID from the data attribute.
+    $('.like-button').on('click', function() {
         const postId = $(this).data('post-id');
-
-        // Here, you'd send a request to the server to update the like count for this post.
-        // The specifics would depend on how your server is set up to receive these requests.
-        $.post(`/posts/${postId}/like`, function(response) {
-            // Handle the response. For example, you might update the number of likes in the post's HTML,
-            // or if the server sends back the total number of likes, you could update with that number.
-            console.log('Post liked:', response);
+        $.post(`/posts/like/${postId}`, function(response) {
         });
     });
 }
@@ -21,8 +13,9 @@ function fetchPosts() {
             postsHtml += `<h2>${post.title}</h2>`;
             postsHtml += `<p>By: ${post.username}</p>`;
             postsHtml += `<p>${post.description}</p>`;
+            postsHtml += `<p>Likes: ${post.likes}</p>`;
             // Adding a "Like" button with a data attribute for the post's unique identifier
-            postsHtml += `<button class="like-btn" data-post-id="${post.id}">Like</button>`;
+            postsHtml += `<button class="like-button" data-post-id="${post._id}">Like</button>`;
             postsHtml += '<hr>';
         });
         $('#postsContainer').html(postsHtml);
