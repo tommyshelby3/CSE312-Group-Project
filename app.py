@@ -66,22 +66,26 @@ def register():
 
 @app.route('/post', methods=['POST'])
 def create_post_route():
-    user = db.client_users.find_one({'auth' : auth})
-    if not user:
-        return jsonify({'error' : 'Invalid User'}), 400
-    username = user['username']
-    title = request.form['title']                   
-    description = request.form['description']      
-    
+
     auth = request.cookies.get('auth')
-    if not auth or db.client_users.find_one({'auth': auth}) is None:
+    
+    if not auth:
         return jsonify({'error': 'Log in to create a post'}), 403
+
+    user = db.client_users.find_one({'auth': auth})
+    if not user:
+        return jsonify({'error': 'Invalid authentication token'}), 400
+    
+
+    username = escape(user['username'])
     title = escape(request.form['title'])
-    username = escape(request.form['username'])
     description = escape(request.form['description'])
 
-    create_post(username, title, description)           #! creates a post
-    return jsonify({'success': True})                   #! returns a json string
+    # Create the post using the sanitized data
+    create_post(username, title, description)
+
+    return jsonify({'success': True})
+
 
 
 
