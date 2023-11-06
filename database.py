@@ -8,6 +8,7 @@ client_users = database['users']
 client_posts = database['posts']
 client_comments = database['comments']
 client_id = database['id']
+client_likes = database['likes']
 
 def get_next_id():
     idNumber = client_id.find_one({})

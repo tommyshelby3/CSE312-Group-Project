@@ -1,0 +1,18 @@
+<!-- FILEPATH: /path/to/auction.html -->
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Auction House WebSocket Example</title>
+    </head>
+    <body>
+        <h1>Auction House WebSocket Example</h1>
+        <div id="messages"></div>
+        <form id="message-form">
+            <input type="text" id="message-input">
+            <button type="submit">Bid</button>
+        </form>
+        <script src="{{ url_for('static', filename='functions.js') }}"></script>
+    </body>
+</html>

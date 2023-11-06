@@ -37,3 +37,27 @@ function task() {
         });
     });
 }
+
+
+const messages = document.getElementById('messages');
+const messageForm = document.getElementById('message-form');
+const messageInput = document.getElementById('message-input');
+const socket = new WebSocket('ws://localhost:8080');
+
+socket.addEventListener('open', (event) => {
+    console.log('WebSocket connection established');
+});
+
+socket.addEventListener('message', (event) => {
+    const message = event.data;
+    const messageElement = document.createElement('div');
+    messageElement.textContent = message;
+    messages.appendChild(messageElement);
+});
+
+messageForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const message = messageInput.value;
+    socket.send(message);
+    messageInput.value = '';
+});

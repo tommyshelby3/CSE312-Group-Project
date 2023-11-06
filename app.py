@@ -5,8 +5,12 @@ import database as db
 import bcrypt
 from html import escape
 from database import create_post, get_posts                 #! Post functions
+from flask_socketio import SocketIO
+from flask_socketio import send, emit, join_room, leave_room
+
 
 app = Flask(__name__)
+socketio = SocketIO(app)
 
 
 @app.route("/")
@@ -88,43 +92,54 @@ def update_like(post_id):
     auth = request.cookies.get('auth')
     if not auth:
         return jsonify({'error': 'Log in to like a post'}), 403
-
     user = db.client_users.find_one({'auth': auth})
     if not user:
         return jsonify({'error': 'Invalid authentication token'}), 400
-
     # Check if the post exists
     post = db.client_posts.find_one({'_id': post_id})
     if not post:
         return jsonify({'error': 'Post not found'}), 404
 
     username = user['username']  # unique identifier for the user in this case
-
-    if username in post.get('users_liked', []):
-        # User has already liked the post, so we unlike it
-        db.client_posts.update_one(
-            {'_id': post_id},
-            {
-                '$pull': {'users_liked': username},  # remove user from the likes
-                '$inc': {'likes': -1}  # decrease the like count
-            }
-        )
+    post_username = post['username']
+    
+    liked = db.client_likes.find_one({'_id': post_id, 'username':username, 'post_username': post_username})
+    if liked:
+        db.client_posts.update_one({'_id': post_id}, {'$inc': {'likes': -1}})
+        db.client_likes.delete_one({'_id': post_id, 'username':username, 'post_username': post_username})
     else:
-        # User hasn't liked the post yet, so we add their like
-        db.client_posts.update_one(
-            {'_id': post_id},
-            {
-                '$push': {'users_liked': username},  # add user to the likes
-                '$inc': {'likes': 1}  # increase the like count
-            }
-        )
-
+        db.client_posts.update_one({'_id': post_id}, {'$inc': {'likes': 1}})
+        db.client_likes.insert_one({'_id': post_id, 'username':username, 'post_username': post_username})
     return jsonify({'success': True})
 
 #!__________________________________________ POSTS Ending ____________________________________________!#
+
+
+#Websocket for Auction
+@socketio.on('message')
+def handleMessage(msg):
+    print('Message: ' + msg)
+    send(msg, broadcast=True)
+
+@socketio.on('json')
+def handleJson(json):
+    print('json: ' + str(json))
+    send(json, broadcast=True)
+
+@socketio.on('my event')
+def handleMyEvent(json):
+    print('my event: ' + str(json))
+    send(json, broadcast=True)
+
+@socketio.on('connect')
+def handleConnect():
+    print('Client connected')
+
+
 
 
 
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080, debug=True)
+    socketio.run(app)
