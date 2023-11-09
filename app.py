@@ -112,7 +112,12 @@ def update_like(post_id):
         db.client_likes.insert_one({'_id': post_id, 'username':username, 'post_username': post_username})
     return jsonify({'success': True})
 
-#!__________________________________________ POSTS Ending ____________________________________________!#
+#!__________________________________________ Auction ____________________________________________!#
+
+@app.route('/auction')
+def auction_page():
+    return render_template('auction.html')
+
 
 
 #Websocket for Auction

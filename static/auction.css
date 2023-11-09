@@ -1,0 +1,25 @@
+/* CSS for the header to contain the button */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    /* add more styles as needed */
+}
+
+/* CSS for the auction button */
+.auction-button {
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    text-decoration: none;
+    border: none;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+    /* add more styles as needed */
+}
+
+.auction-button:hover {
+    background-color: #0056b3;
+}
