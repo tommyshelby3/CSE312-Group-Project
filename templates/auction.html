@@ -1,18 +1,72 @@
-<!-- FILEPATH: /path/to/auction.html -->
-
+<!-- auction.html -->
 <!DOCTYPE html>
 <html>
     <head>
         <meta charset="UTF-8">
         <title>Auction House WebSocket Example</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='auction.css') }}">
+        <script type="text/javascript" src="//code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.min.js"></script>
+        <script type="text/javascript" src="{{ url_for('static', filename='js/functions.js') }}"></script>
     </head>
     <body>
-        <h1>Auction House WebSocket Example</h1>
+        <h1>Auction House</h1>
+        <button type="button" id="upload-auction-item-btn" data-toggle="modal" data-target="#auctionItemModal">
+            Upload Auction Item
+        </button>
+        <div class="modal" id="auctionItemModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <h4 class="modal-title">Upload Auction Item</h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+
+            <!-- Modal body -->
+            <div class="modal-body">
+                <form id="upload-auction-form">
+                <div class="form-group">
+                    <label for="item-title">Item Title:</label>
+                    <input type="text" class="form-control" id="item-title" name="title" required>
+                </div>
+                <div class="form-group">
+                    <label for="item-description">Description:</label>
+                    <textarea class="form-control" id="item-description" name="description" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="item-image">Image:</label>
+                    <input type="file" class="form-control" id="item-image" name="image" accept="image/*" required>
+                </div>
+                <div class="form-group">
+                    <label for="starting-price">Starting Price:</label>
+                    <input type="number" class="form-control" id="starting-price" name="starting_price" required>
+                </div>
+                <div class="form-group">
+                    <label for="auction-duration">Auction Duration:</label>
+                    <input type="number" class="form-control" id="auction-duration" name="duration" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Submit</button>
+                </form>
+            </div>
+
+            <!-- Modal footer -->
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+            </div>
+
+            </div>
+        </div>
+        </div>
+        <div id="auction-details">
+            <p>Current Bid: $<span id="current-bid">0</span></p>
+            <p>Time Remaining: <span id="time-remaining">00:00:00</span></p>
+        </div>
         <div id="messages"></div>
-        <form id="message-form">
-            <input type="text" id="message-input">
+        <form id="bid-form">
+            <input type="number" id="bid-input" min="1" step="0.01">
             <button type="submit">Bid</button>
         </form>
-        <script src="{{ url_for('static', filename='functions.js') }}"></script>
     </body>
 </html>

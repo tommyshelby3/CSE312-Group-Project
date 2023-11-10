@@ -7,6 +7,11 @@ from html import escape
 from database import create_post, get_posts                 #! Post functions
 from flask_socketio import SocketIO
 from flask_socketio import send, emit, join_room, leave_room
+from flask import Blueprint, render_template, session
+from flask_socketio import SocketIO, emit
+from datetime import datetime
+from flask_login import current_user
+# from your_auction_model import Auction
 
 
 app = Flask(__name__)
@@ -119,7 +124,20 @@ def auction_page():
     return render_template('auction.html')
 
 
+@socketio.on('connect', namespace='/auction')
+def connect():
+    print('Client connected')
 
+@socketio.on('disconnect', namespace='/auction')
+def disconnect():
+    print('Client disconnected')
+    
+def upload_auction_item():
+
+    return jsonify({'success': 'Auction item uploaded successfully.'}) 
+    
+    
+    
 #Websocket for Auction
 @socketio.on('message')
 def handleMessage(msg):

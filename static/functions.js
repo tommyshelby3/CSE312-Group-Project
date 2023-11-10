@@ -61,3 +61,32 @@ messageForm.addEventListener('submit', (event) => {
     socket.send(message);
     messageInput.value = '';
 });
+
+//! ______________________________  Auction _______________________________
+$(document).ready(function() {
+    $('#upload-auction-form').submit(function(e) {
+        e.preventDefault();
+        var formData = new FormData(this);
+
+        // AJAX request to server to submit auction item
+        $.ajax({
+            url: '/upload_auction_item',  
+            type: 'POST',
+            data: formData,
+            contentType: false,
+            processData: false,
+            success: function(response) {
+                if(response.status === 'success') {
+                    // Handle success - close modal and reset form or give user feedback
+                    $('#auctionItemModal').modal('hide');
+                    $('#upload-auction-form')[0].reset();
+                    // Optionally, refresh the list of auction items or add the new item to the view
+                } else {
+                    // Handle failure - display error message
+                    alert(response.error);
+                }
+            }
+        });
+    });
+
+});
