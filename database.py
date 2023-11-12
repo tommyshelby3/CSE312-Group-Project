@@ -101,7 +101,6 @@ def update_bidder(auction_id, bidder, bid_price):
             # Add the previous bidder to the previous_bids list
             auction_items.update_one({'_id': auction_id}, {'$push': {'previous_bids': {'bidder': prev_bidder, 'price': prev_price}}})
         
-        # If there was no previous bidder, you might still want to record the starting price
         else:
             # Add the starting price to the previous_bids list
             auction_items.update_one({'_id': auction_id}, {'$push': {'previous_bids': {'bidder': 'Starting Price', 'price': prev_price}}})
