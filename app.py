@@ -125,7 +125,8 @@ def update_like(post_id):
 @app.route('/auction', methods=['GET', 'POST'])
 def auction_page():
     if request.method == 'GET':
-        return render_template('auction.html')
+        auction_items = db.get_auction_items()
+        return render_template('auction.html', auction_items=auction_items)
     elif request.method == 'POST':
         return redirect(url_for('post'))
 

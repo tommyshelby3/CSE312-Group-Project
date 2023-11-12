@@ -61,6 +61,17 @@
             </div>
         </div>
         </div>
+        <div id="auction-items">
+            {% for item in auction_items %}
+            <div class="auction-item">
+                <h3>{{ item.title }}</h3>
+                <p>{{ item.description }}</p>
+                <img src="{{ url_for('static', filename='image/' ~ item.image_path) }}" alt="Auction Item Image">
+                <p>Starting Price: {{ item.starting_price }}</p>
+                <p>Auction Duration: {{ item.duration }}</p>
+            </div>
+            {% endfor %}
+        </div>
         <div id="auction-details">
             <p>Current Bid: $<span id="current-bid">0</span></p>
             <p>Time Remaining: <span id="time-remaining">00:00:00</span></p>

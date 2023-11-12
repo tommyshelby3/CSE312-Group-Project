@@ -82,3 +82,6 @@ def update_bidder(auction_id, bidder, price):
     auction_items.update_one({'_id': auction_id}, {'$set': {'current_bidder': bidder, 'price': price}})
     auction_items.update_one({'_id': auction_id}, {'$push': {'previous_bids': prev_bidder}})
 
+
+def get_auction_items():
+    return list(auction_items.find())
