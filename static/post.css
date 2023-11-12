@@ -1,0 +1,46 @@
+/* FILEPATH: /Users/camerontoy/CSE 312 Part 2/Project Part 3/CSE312-Group-Project/static/post.css */
+
+/* Center the form elements */
+form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Add normal margins between form elements */
+form > * {
+  margin: 10px 0;
+}
+
+/* Style the form labels */
+label {
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+/* Style the form inputs */
+input[type="text"],
+input[type="number"],
+textarea {
+  padding: 10px;
+  border-radius: 5px;
+  border: none;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 500px;
+}
+
+/* Style the submit button */
+button[type="submit"] {
+  padding: 10px 20px;
+  border-radius: 5px;
+  border: none;
+  background-color: #007bff;
+  color: #fff;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+button[type="submit"]:hover {
+  background-color: #0069d9;
+}

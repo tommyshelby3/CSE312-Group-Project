@@ -11,6 +11,8 @@ from flask import Blueprint, render_template, session
 from flask_socketio import SocketIO, emit
 from datetime import datetime
 from flask_login import current_user
+from werkzeug.utils import secure_filename
+import auction
 # from your_auction_model import Auction
 
 
@@ -119,9 +121,35 @@ def update_like(post_id):
 
 #!__________________________________________ Auction ____________________________________________!#
 
-@app.route('/auction')
+@app.route('/auction', methods=['GET', 'POST'])
 def auction_page():
-    return render_template('auction.html')
+    if request.method == 'GET':
+        return render_template('auction.html')
+    elif request.method == 'POST':
+        return redirect(url_for('post'))
+
+@app.route('/post', methods=['GET', 'POST'])
+def auction_upload():
+    if request.method == 'GET':
+        return render_template('post.html')
+    elif request.method == 'POST':
+        data = request.form
+        title = data['title']
+        description = data['description']
+        price = data['price']
+        # auction = Auction(title, description, price)
+        # auction.upload_auction_item()
+        return redirect(url_for('auction_page'))
+    
+@app.route('/auctions/create', methods=['POST'])
+def create_auction():
+    image_path = request.files["image"].save("./image/" + secure_filename(request.files["image"].filename))
+    auctionItem = auction.Auction(request.form['title'], request.form['description'], request.form['price'], image_path)
+    auctionItem.upload_auction_item()
+    return redirect(url_for('auction'))
+
+
+
 
 
 @socketio.on('connect', namespace='/auction')
@@ -133,7 +161,6 @@ def disconnect():
     print('Client disconnected')
     
 def upload_auction_item():
-
     return jsonify({'success': 'Auction item uploaded successfully.'}) 
     
     

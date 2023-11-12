@@ -1,0 +1,34 @@
+<!-- FILEPATH: /Users/camerontoy/CSE 312 Part 2/Project Part 3/CSE312-Group-Project/templates/post.html -->
+
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>UniMarket</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='post.css') }}">
+        <script type="text/javascript" src="//code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.min.js"></script>
+        <script type="text/javascript" src="{{ url_for('static', filename='js/functions.js') }}"></script>
+    </head>
+    <form action="/auctions/create" method="POST" enctype="multipart/form-data">
+        <label for="title">Title:</label>
+        <input type="text" id="title" name="title" required><br>
+      
+        <label for="description">Description:</label>
+        <textarea id="description" name="description" required></textarea><br>
+      
+        <label for="image">Image:</label>
+        <input type="file" id="image" name="image" accept="image/*" required><br>
+      
+        <label for="starting_price">Starting Price:</label>
+        <input type="number" id="starting_price" name="starting_price" min="0" step="0.01" required><br>
+      
+        <label for="duration">Duration (in hours):</label>
+        <input type="number" id="duration" name="duration" min="1" required><br>
+        <a href="/auction">
+            <input type="submit" value="Create Auction" >
+        </a>
+            
+      </form>
+</html>
+
+
