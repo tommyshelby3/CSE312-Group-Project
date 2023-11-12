@@ -6,8 +6,8 @@ class Auction:
         self.description = description
         self.price = price
         self.imagepath = imagepath
-        self.update_datebase()
+        self.auction_id = self.update_datebase()
         
         
     def update_datebase (self):
-        db.create_auction_item(self.title, self.description, self.price, self.imagepath)
+        return db.create_auction_item(self.auction_id, self.title, self.description, self.price, self.imagepath)

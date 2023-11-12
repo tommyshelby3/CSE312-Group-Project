@@ -18,6 +18,7 @@ import os
 
 
 app = Flask(__name__)
+app.config["UPLOAD_FOLDER"] = "./static/images"
 socketio = SocketIO(app)
 
 
@@ -145,9 +146,10 @@ def auction_upload():
     
 @app.route('/auctions/create', methods=['POST'])
 def create_auction():
-    image_path = request.files["image"].save("./image/" + secure_filename(request.files["image"].filename))
-    auctionItem = auction.Auction(request.form['title'], request.form['description'], request.form['price'], image_path)
-    auctionItem.upload_auction_item()
+    auctionItem = auction.Auction(request.form['title'], request.form['description'], request.form['price'], "")
+    image_path = app.config["UPLOAD_FOLDER"] + auctionItem.auction_id + ".jpg"
+    auctionItem.imagepath = image_path
+    request.files["image"].save(image_path)
     return redirect(url_for('auction'))
 
 
@@ -177,13 +179,15 @@ def upload_auction():
         image_path = "./static/images/" 
         if not os.path.exists(image_path):
             os.makedirs(image_path)
+
+        
         
         image_filename = secure_filename(image.filename)
         image.save(os.path.join(image_path, image_filename))
 
         #- save the action item to the database
         db.create_auction_item(
-            title, description, starting_price, os.path.join(image_path, image_filename))
+            title, description, starting_price, image_filename)
 
         #- redirect to the auction house page
         return redirect(url_for('auction_page'))
@@ -232,5 +236,6 @@ def handleConnect():
 
 
 if __name__ == "__main__":
+    app.secret_key = 'super secret key'
     app.run(host="0.0.0.0", port=8080, debug=True)
     socketio.run(app)

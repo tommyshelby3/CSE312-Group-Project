@@ -100,3 +100,9 @@ body {
     border: 1px solid #888;
     width: 80%;
 }
+
+
+.auction-item img {
+    max-width: 500px;
+    height: auto;
+}

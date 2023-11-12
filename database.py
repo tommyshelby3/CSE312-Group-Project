@@ -73,14 +73,20 @@ def create_auction_item(title, description, price, imagepath):
         'current_bidder': "",
         '_id': next_auction_id(),
         "previous_bids": [],
+        "winner": ""
     }
     auction_items.insert_one(auction_item)
+    return auction_item['_id'] 
+
+
 
 
 def update_bidder(auction_id, bidder, price):
     prev_bidder = auction_items.find_one({'_id': auction_id})['current_bidder']
     auction_items.update_one({'_id': auction_id}, {'$set': {'current_bidder': bidder, 'price': price}})
     auction_items.update_one({'_id': auction_id}, {'$push': {'previous_bids': prev_bidder}})
+
+
 
 
 def get_auction_items():

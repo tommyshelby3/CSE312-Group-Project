@@ -39,7 +39,7 @@
                 </div>
                 <div class="form-group">
                     <label for="item-image">Image:</label>
-                    <input type="file" class="form-control" id="item-image" name="image" accept="image/*" required>
+                    <input type="file" class="form-control" id="item-image" name="image" accept="image/jpeg, image/png" required>
                 </div>
                 <div class="form-group">
                     <label for="starting-price">Starting Price:</label>
@@ -66,9 +66,11 @@
             <div class="auction-item">
                 <h3>{{ item.title }}</h3>
                 <p>{{ item.description }}</p>
-                <img src="{{ url_for('static', filename='image/' ~ item.image_path) }}" alt="Auction Item Image">
+                <img src="{{ url_for('static', filename='images/' ~ item.imagepath) }}" alt="Auction Item Image">
                 <p>Starting Price: {{ item.starting_price }}</p>
                 <p>Auction Duration: {{ item.duration }}</p>
+                <input type="number" id="bid-input" min="1" step="0.01" placeholder="Enter bid amount">
+                <button class="btn btn-primary" onclick="bid('{{ item.id }}')">Bid</button>
             </div>
             {% endfor %}
         </div>
