@@ -13,6 +13,7 @@ from datetime import datetime
 from flask_login import current_user
 from werkzeug.utils import secure_filename
 import auction
+import os
 # from your_auction_model import Auction
 
 
@@ -149,6 +150,45 @@ def create_auction():
     return redirect(url_for('auction'))
 
 
+@app.route('/upload_auction', methods=['GET', 'POST'])
+def upload_auction():
+    if request.method == 'POST':
+        #- check if user is logged in
+        auth = request.cookies.get('auth')
+        if not auth:
+            flash('You must be logged in to create an auction.')
+            return redirect(url_for('login'))
+
+        user = db.client_users.find_one({'auth': auth})
+        if not user:
+            flash('Invalid authentication token.')
+            return redirect(url_for('login'))
+
+        #- process the uploaded file and form data
+        title = request.form['title']
+        description = request.form['description']
+        starting_price = request.form['starting_price']
+        #- process the duration appropriately
+        duration = request.form['duration']
+        image = request.files['image']
+
+        
+        image_path = "./static/images/" 
+        if not os.path.exists(image_path):
+            os.makedirs(image_path)
+        
+        image_filename = secure_filename(image.filename)
+        image.save(os.path.join(image_path, image_filename))
+
+        #- save the action item to the database
+        db.create_auction_item(
+            title, description, starting_price, os.path.join(image_path, image_filename))
+
+        #- redirect to the auction house page
+        return redirect(url_for('auction_page'))
+    else:
+        #- If it's a GET request, just render the upload auction form
+        return render_template('upload_auction.html')
 
 
 

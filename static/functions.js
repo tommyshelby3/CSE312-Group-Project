@@ -90,3 +90,12 @@ $(document).ready(function() {
     });
 
 });
+
+document.addEventListener('DOMContentLoaded', function() {
+  var uploadButton = document.getElementById('upload-auction-item-btn');
+  if (uploadButton) {
+    uploadButton.addEventListener('click', function() {
+      window.location.href = '/upload_auction';
+    });
+  }
+});

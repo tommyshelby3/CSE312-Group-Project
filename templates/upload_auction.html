@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Auction Item</title>
+    <link rel="stylesheet" href="auction.css">
+    <script src="functions.js"></script>
+</head>
+
+<body>
+    <!-- Modal body -->
+    <div class="modal-body">
+        <!-- Change the form id to 'auction-upload-form' and set the method to 'POST' and the correct action -->
+        <form id="auction-upload-form" action="/auctions/create" method="POST" enctype="multipart/form-data">
+            <!-- ... other form fields ... -->
+            <button type="submit" class="btn btn-primary">Post Auction Item</button>
+        </form>
+    </div>
+    <div class="form-container">
+        <form action="/upload_auction" method="post" enctype="multipart/form-data" class="upload-form">
+            <h2>Upload Auction Item</h2>
+
+            <div class="form-group">
+                <label for="title" class="form-label">Item Title:</label>
+                <input type="text" id="title" name="title" class="form-input" placeholder="Enter item title" required>
+            </div>
+
+            <div class="form-group">
+                <label for="description" class="form-label">Item Description:</label>
+                <textarea id="description" name="description" class="form-textarea" rows="4"
+                    placeholder="Enter item description" required></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="image" class="form-label">Item Image:</label>
+                <input type="file" id="image" name="image" class="form-input" required>
+            </div>
+
+            <div class="form-group">
+                <label for="starting_price" class="form-label">Starting Price:</label>
+                <input type="number" id="starting_price" name="starting_price" class="form-input"
+                    placeholder="Enter starting price" required>
+            </div>
+
+            <div class="form-group">
+                <label for="duration" class="form-label">Auction Duration:</label>
+                <input type="text" id="duration" name="duration" class="form-input"
+                    placeholder="Enter duration (e.g., 7 days)" required>
+            </div>
+
+            <div class="form-group">
+                <button type="submit" class="form-submit">Post Auction Item</button>
+            </div>
+        </form>
+    </div>
+</body>
+
+</html>
