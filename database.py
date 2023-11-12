@@ -1,6 +1,7 @@
 from pymongo import MongoClient
 import secrets
 import bcrypt
+from datetime import datetime, timedelta
 
 client = MongoClient("mongo")
 database = client['CSE312-Group-Project']
@@ -64,7 +65,11 @@ def next_auction_id():
         return 1
 
 
-def create_auction_item(title, description, price, imagepath):
+def create_auction_item(title, description, price, imagepath, duration):
+    # Calculate the end time by adding the duration to the current time
+    duration_hours = int(duration)
+    end_time = datetime.now() + timedelta(minutes=duration_hours)
+
     auction_item = {
         'title': title,
         'description': description,
@@ -73,7 +78,9 @@ def create_auction_item(title, description, price, imagepath):
         'current_bidder': "",
         '_id': next_auction_id(),
         "previous_bids": [],
-        "winner": ""
+        "end_time": end_time,
+        "winner": "",
+        "duration": duration,
     }
     auction_items.insert_one(auction_item)
     return auction_item['_id'] 
@@ -81,13 +88,29 @@ def create_auction_item(title, description, price, imagepath):
 
 
 
-def update_bidder(auction_id, bidder, price):
-    prev_bidder = auction_items.find_one({'_id': auction_id})['current_bidder']
-    auction_items.update_one({'_id': auction_id}, {'$set': {'current_bidder': bidder, 'price': price}})
-    auction_items.update_one({'_id': auction_id}, {'$push': {'previous_bids': prev_bidder}})
+def update_bidder(auction_id, bidder, bid_price):
+    # Retrieve the auction item
+    auction_item = auction_items.find_one({'_id': auction_id})
+    
+    if auction_item:
+        prev_bidder = auction_item['current_bidder']
+        prev_price = auction_item['price']
+        
+        # Check if there was a previous bidder
+        if prev_bidder:
+            # Add the previous bidder to the previous_bids list
+            auction_items.update_one({'_id': auction_id}, {'$push': {'previous_bids': {'bidder': prev_bidder, 'price': prev_price}}})
+        
+        else:
+            # Add the starting price to the previous_bids list
+            auction_items.update_one({'_id': auction_id}, {'$push': {'previous_bids': {'bidder': 'Starting Price', 'price': prev_price}}})
+
+        # Update the current bidder and the current price, regardless of whether there was a previous bidder
+        auction_items.update_one({'_id': auction_id}, {'$set': {'current_bidder': bidder, 'price': bid_price}})
 
 
 
 
 def get_auction_items():
+    print(auction_items.find())
     return list(auction_items.find())

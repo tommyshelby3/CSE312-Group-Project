@@ -7,7 +7,7 @@
         <link rel="stylesheet" href="{{ url_for('static', filename='auction.css') }}">
         <script type="text/javascript" src="//code.jquery.com/jquery-3.6.0.min.js"></script>
         <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.min.js"></script>
-        <script type="text/javascript" src="{{ url_for('static', filename='js/functions.js') }}"></script>
+        <script src="{{ url_for('static', filename='auctions.js') }}"></script>
     </head>
     <body>
         <h1>Auction House</h1>
@@ -67,21 +67,17 @@
                 <h3>{{ item.title }}</h3>
                 <p>{{ item.description }}</p>
                 <img src="{{ url_for('static', filename='images/' ~ item.imagepath) }}" alt="Auction Item Image">
-                <p>Starting Price: {{ item.starting_price }}</p>
-                <p>Auction Duration: {{ item.duration }}</p>
-                <input type="number" id="bid-input" min="1" step="0.01" placeholder="Enter bid amount">
-                <button class="btn btn-primary" onclick="bid('{{ item.id }}')">Bid</button>
+                <p>Current Price: $<span id="current-price-{{ item._id }}">{{ item.price }}</span></p>
+                <p>Auction duration: {{ item.duration }}</p>
+                <input type="number" id="bid-input-{{ item._id }}" min="1" step="0.01" placeholder="Enter bid amount">
+                <button class="btn btn-primary" onclick="bid('{{ item._id }}')">Bid</button>
+                <p>Time Remaining: <span id="time-remaining-{{ item._id }}">calculating...</span></p>
             </div>
             {% endfor %}
         </div>
         <div id="auction-details">
             <p>Current Bid: $<span id="current-bid">0</span></p>
-            <p>Time Remaining: <span id="time-remaining">00:00:00</span></p>
         </div>
         <div id="messages"></div>
-        <form id="bid-form">
-            <input type="number" id="bid-input" min="1" step="0.01">
-            <button type="submit">Bid</button>
-        </form>
     </body>
 </html>
