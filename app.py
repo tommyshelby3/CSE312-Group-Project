@@ -187,7 +187,7 @@ def upload_auction():
 
         #- save the action item to the database
         db.create_auction_item(
-            title, description, starting_price, image_filename)
+            title, description, starting_price, image_filename, duration)
 
         #- redirect to the auction house page
         return redirect(url_for('auction_page'))
@@ -199,15 +199,44 @@ def upload_auction():
 
 @socketio.on('connect', namespace='/auction')
 def connect():
-    print('Client connected')
-
-@socketio.on('disconnect', namespace='/auction')
-def disconnect():
-    print('Client disconnected')
+    print('Client connected to auction WS')
     
 def upload_auction_item():
     return jsonify({'success': 'Auction item uploaded successfully.'}) 
+
+
+@socketio.on('bid', namespace='/auction')
+def handle_bid(json):
+    # Authentication check
+    print(json)
+    auth = request.cookies.get('auth')
+    if not auth:
+        emit('error', {'error': 'Authentication required'})
+        return
+    user = db.client_users.find_one({'auth': auth})
+    if not user:
+        emit('error', {'error': 'Invalid authentication token'})
+        return
+
+    # Extract bid information from json
+    auction_id = json['auction_id']
+    bid_amount = json['bid_amount']
+    # Fetch the auction item
+    print(db.auction_items)
+    auction_item = db.auction_items.find_one({'_id': auction_id})
     
+    # Check if the auction is still active and the bid is valid
+    if auction_item and auction_item['end_time'] > datetime.now() and bid_amount > auction_item['price']:
+        # Update the bid
+        db.update_bidder(auction_id, user['username'], bid_amount)
+        # Emit the new bid to all clients
+        emit('new_bid', {'auction_id': auction_id, 'new_price': bid_amount}, broadcast=True, namespace='/auction')
+    else:
+        emit('error', {'error': 'Bid is not valid or auction has ended', 'auction_item': auction_item, 'bid_amount': bid_amount})
+
+@socketio.on('disconnect', namespace='/auction')
+def disconnect():
+    print('Client disconnected')   
     
     
 #Websocket for Auction
@@ -228,7 +257,7 @@ def handleMyEvent(json):
 
 @socketio.on('connect')
 def handleConnect():
-    print('Client connected')
+    print('Client connected to regular WS')
 
 
 

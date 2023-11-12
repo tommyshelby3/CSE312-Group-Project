@@ -1,6 +1,7 @@
 from pymongo import MongoClient
 import secrets
 import bcrypt
+from datetime import datetime, timedelta
 
 client = MongoClient("mongo")
 database = client['CSE312-Group-Project']
@@ -64,7 +65,11 @@ def next_auction_id():
         return 1
 
 
-def create_auction_item(title, description, price, imagepath):
+def create_auction_item(title, description, price, imagepath, duration):
+    # Calculate the end time by adding the duration to the current time
+    duration_hours = int(duration)
+    end_time = datetime.now() + timedelta(minutes=duration_hours)
+
     auction_item = {
         'title': title,
         'description': description,
@@ -73,7 +78,9 @@ def create_auction_item(title, description, price, imagepath):
         'current_bidder': "",
         '_id': next_auction_id(),
         "previous_bids": [],
-        "winner": ""
+        "end_time": end_time,
+        "winner": "",
+        "duration": duration,
     }
     auction_items.insert_one(auction_item)
     return auction_item['_id'] 
@@ -90,4 +97,5 @@ def update_bidder(auction_id, bidder, price):
 
 
 def get_auction_items():
+    print(auction_items.find())
     return list(auction_items.find())
