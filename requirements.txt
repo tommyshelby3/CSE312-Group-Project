@@ -3,4 +3,3 @@ pymongo
 bcrypt
 flask_socketio
 flask_login
-Thread
