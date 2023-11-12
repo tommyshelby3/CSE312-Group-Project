@@ -71,12 +71,12 @@
                 <p>Auction duration: {{ item.duration }}</p>
                 <input type="number" id="bid-input-{{ item._id }}" min="1" step="0.01" placeholder="Enter bid amount">
                 <button class="btn btn-primary" onclick="bid('{{ item._id }}')">Bid</button>
+                <p>Time Remaining: <span id="time-remaining-{{ item._id }}">calculating...</span></p>
             </div>
             {% endfor %}
         </div>
         <div id="auction-details">
             <p>Current Bid: $<span id="current-bid">0</span></p>
-            <p>Time Remaining: <span id="time-remaining">00:00:00</span></p>
         </div>
         <div id="messages"></div>
     </body>

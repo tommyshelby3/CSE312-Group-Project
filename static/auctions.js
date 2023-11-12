@@ -19,6 +19,14 @@ socket.on('error', function(data) {
     }
 });
 
+socket.on('time_remaining_update', function(data) {
+    if (data.auction_id) {
+        // Update the UI with the new time remaining for the specific auction item
+        $('#time-remaining-' + data.auction_id).text(data.time_remaining);
+    }
+});
+
+
 function bid(auctionId) {
     const bidInputSelector = '#bid-input-' + auctionId;
     console.log("Selector:", bidInputSelector);

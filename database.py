@@ -88,10 +88,26 @@ def create_auction_item(title, description, price, imagepath, duration):
 
 
 
-def update_bidder(auction_id, bidder, price):
-    prev_bidder = auction_items.find_one({'_id': auction_id})['current_bidder']
-    auction_items.update_one({'_id': auction_id}, {'$set': {'current_bidder': bidder, 'price': price}})
-    auction_items.update_one({'_id': auction_id}, {'$push': {'previous_bids': prev_bidder}})
+def update_bidder(auction_id, bidder, bid_price):
+    # Retrieve the auction item
+    auction_item = auction_items.find_one({'_id': auction_id})
+    
+    if auction_item:
+        prev_bidder = auction_item['current_bidder']
+        prev_price = auction_item['price']
+        
+        # Check if there was a previous bidder
+        if prev_bidder:
+            # Add the previous bidder to the previous_bids list
+            auction_items.update_one({'_id': auction_id}, {'$push': {'previous_bids': {'bidder': prev_bidder, 'price': prev_price}}})
+        
+        # If there was no previous bidder, you might still want to record the starting price
+        else:
+            # Add the starting price to the previous_bids list
+            auction_items.update_one({'_id': auction_id}, {'$push': {'previous_bids': {'bidder': 'Starting Price', 'price': prev_price}}})
+
+        # Update the current bidder and the current price, regardless of whether there was a previous bidder
+        auction_items.update_one({'_id': auction_id}, {'$set': {'current_bidder': bidder, 'price': bid_price}})
 
 
 
