@@ -99,3 +99,36 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 });
+
+
+socket.on('auction_winner', (data) => {
+
+let winnerHTML = `
+    <div>
+    ${data.username} won ${data.item} for $${data.finalPrice}
+    </div>
+`
+
+$('#auctionWinnersContainer').append(winnerHTML)
+
+})
+
+
+$(document).ready(function() {
+    var auctionSocket = io.connect('/auction'); // Make sure the namespace matches your server setup
+
+    auctionSocket.on('connect', function() {
+        console.log('Connected to the auction namespace!');
+    });
+
+    auctionSocket.on('auction_winner', function(data) {
+        var winnerHTML = '<div class="winner-entry">';
+        winnerHTML += '<p><strong>' + data.username + '</strong> won <em>' + data.item + '</em> for $' + data.finalPrice + '</p>';
+        winnerHTML += '</div>';
+        
+        // Append the new HTML to the auction winners container
+        $('#auctionWinnersContainer').append(winnerHTML);
+    });
+
+    auctionSocket.emit('request_latest_auction_winners');
+});

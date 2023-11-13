@@ -36,6 +36,26 @@
         <!-- all the post should show up here for now  ||  we need to add css design to it -->
     </div>
     <script src="{{ url_for('static', filename='functions.js') }}"></script>
+    <h2>Auction Winners:</h2>
+    <div id="auctionWinnersContainer">
+        <!-- Auction winners will be dynamically loaded here using WebSockets -->
+    </div>
+    
+    <script src="https://cdn.socket.io/socket.io-3.1.3.min.js"></script>
+    <script type="text/javascript">
+        var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+        socket.on('connect', function () {
+            console.log('Websocket connected!');
+        });
+
+        socket.on('auction_winner', function (data) {
+            var winnerHTML = '<div class="winner-entry">';
+            winnerHTML += '<p><strong>' + data.username + '</strong> won <em>' + data.item + '</em> for $' + data.finalPrice + '</p>';
+            winnerHTML += '</div>';
+            $('#auctionWinnersContainer').append(winnerHTML);
+        });
+    </script>
 
 </body>
 

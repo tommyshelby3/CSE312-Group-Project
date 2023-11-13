@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auctions I've Created</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='auction.css') }}">
+</head>
+
+<body>
+    <h1>Auctions I've Created</h1>
+    <div id="userAuctionsContainer">
+        {% for auction in auctions %}
+        <div class="user-auction-entry">
+            <h3>{{ auction.title }}</h3>
+            <p>Description: {{ auction.description }}</p>
+            <p>Starting Price: {{ auction.price }}</p>
+            <!-- Add more details as needed -->
+        </div>
+        {% endfor %}
+    </div>
+    <a href="/">Back to Home</a>
+</body>
+
+</html>

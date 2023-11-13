@@ -17,6 +17,7 @@ import os
 from threading import Thread
 import time
 # from your_auction_model import Auction
+from database import *
 
 
 app = Flask(__name__)
@@ -281,6 +282,53 @@ def broadcast_time_remaining():
 # Start the background thread
 thread = Thread(target=broadcast_time_remaining)
 thread.start()
+
+#! ______________________________________ Bid creator ______________________________________ !#
+
+
+@app.route('/bid_creator')
+def bid_creator():
+    if 'username' in session:
+        user_auctions = get_user_auctions(session['username'])
+        return render_template('bid_creator.html', auctions=user_auctions)
+    else:
+        return "Please login to view this page", 403
+
+#! ______________________________________ Bid winner ______________________________________ !#
+def auction_winners():
+    winners = list_auction_winners()
+    print(winners)
+    print("winners", jsonify(winners))
+    return jsonify(winners)
+
+
+
+@socketio.on('request_auction_winners')
+def handle_request_auction_winners():
+    auction_items = get_auction_items()
+    for item in auction_items:
+        if item['end_time'] < datetime.now():
+            winner_data = get_auction_winner(item['_id'])
+            if winner_data:
+                emit('auction_winner', winner_data)
+
+
+@socketio.on('auction_ended')
+def handle_auction_ended(auction_id):
+
+    winner = get_auction_winner(auction_id)
+
+    emit('auction_winner', {
+        'username': winner['username'],
+        'item': winner['item'],
+        'finalPrice': winner['finalPrice']
+    })
+
+
+def emit_auction_winner(auction_id):
+    winner_details = get_auction_winner(auction_id)
+    if winner_details:
+        emit('auction_winner', winner_details, broadcast=True)
 
 if __name__ == "__main__":
     app.secret_key = 'super secret key'

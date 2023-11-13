@@ -109,8 +109,46 @@ def update_bidder(auction_id, bidder, bid_price):
         auction_items.update_one({'_id': auction_id}, {'$set': {'current_bidder': bidder, 'price': bid_price}})
 
 
+#! ______________________________ bid creator _________________________________________
 
+def get_user_auctions(username):
+    # Retrieve all auction items created by a specific user
+    user_auctions = auction_items.find({'creator_username': username})
+    return list(user_auctions)
+
+#! ______________________________ bid winner _________________________________________
+
+def list_auction_winners():
+    # Retrieve all auction items that have a winner
+    finished_auctions = auction_items.find({'winner': {'$ne': ""}})
+
+    winners_list = []
+    for auction in finished_auctions:
+        winners_list.append({
+            'username': auction['winner'],
+            'item': auction['title'],
+            'finalPrice': auction['price']
+        })
+
+    return winners_list
 
 def get_auction_items():
     print(auction_items.find())
     return list(auction_items.find())
+
+
+def get_auction_winner(auction_id):
+    #- Retrieve the auction item using its ID
+    auction_item = auction_items.find_one({'_id': auction_id})
+    if auction_item and 'winner' in auction_item:
+        return {
+            'auction_id': auction_id,
+            'username': auction_item['winner'],
+            'item': auction_item['title'],
+            'finalPrice': auction_item['price']
+        }
+    else:
+        return None
+
+
+
