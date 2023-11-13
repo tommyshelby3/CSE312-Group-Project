@@ -1,0 +1,30 @@
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet" href="{{ url_for('static', filename='profile.css') }}">
+        <title>Profile Page</title>
+    </head>
+    <body>
+        <h1>Welcome to your profile page!</h1>
+        <p>Username: {{ username }}</p>
+        
+        <h2>Your Auction Posts:</h2>
+        <ul>
+            {% for post in posts %}
+                <li>{{ post.title }}</li>
+                <li>{{ post.description }}</li>
+                <img src="{{ url_for('static', filename='images/' ~ post.imagepath) }}" alt="Auction Item Image">
+            {% endfor %}
+        </ul>
+        
+        <h2>Your Auction Wins:</h2>
+        <ul>
+            {% for win in wins %}
+                <li>{{ win.title }}</li>
+                <li>{{ win.description }}</li>
+                <img src="{{ url_for('static', filename='images/' ~ wins.imagepath) }}" alt="Auction Item Image">
+            {% endfor %}
+        </ul>
+    </body>
+</html>

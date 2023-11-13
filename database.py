@@ -52,7 +52,6 @@ def get_posts():                                            #! gets all posts
 
 
 #Auction 
-
 def next_auction_id():
     idNumber = auction_id.find_one({})
     nextID = 0
@@ -65,7 +64,7 @@ def next_auction_id():
         return 1
 
 
-def create_auction_item(title, description, price, imagepath, duration):
+def create_auction_item(title, description, price, imagepath, duration, creator_username):
     # Calculate the end time by adding the duration to the current time
     duration_hours = int(duration)
     end_time = datetime.now() + timedelta(minutes=duration_hours)
@@ -81,11 +80,21 @@ def create_auction_item(title, description, price, imagepath, duration):
         "end_time": end_time,
         "winner": "",
         "duration": duration,
+        "creator_username": creator_username
     }
     auction_items.insert_one(auction_item)
     return auction_item['_id'] 
 
 
+def get_user_auctions(username):
+    # Retrieve all auction items created by a specific user
+    user_auctions = auction_items.find({'creator_username': username})
+    return list(user_auctions)
+
+def get_user_auctions_wins(username):
+    # Retrieve all auction items created by a specific user
+    user_auctions = auction_items.find({'winner': username})
+    return list(user_auctions)
 
 
 def update_bidder(auction_id, bidder, bid_price):
@@ -133,13 +142,12 @@ def list_auction_winners():
     return winners_list
 
 def get_auction_items():
-    print(auction_items.find())
     return list(auction_items.find())
 
 
 def get_auction_winner(auction_id):
     #- Retrieve the auction item using its ID
-    auction_item = auction_items.find_one({'_id': auction_id})
+    auction_item = dict(list[auction_items.find_one({'_id': auction_id})])
     if auction_item and 'winner' in auction_item:
         return {
             'auction_id': auction_id,

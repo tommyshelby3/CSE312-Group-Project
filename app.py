@@ -133,6 +133,25 @@ def auction_page():
         return render_template('auction.html', auction_items=auction_items)
     elif request.method == 'POST':
         return redirect(url_for('post'))
+    
+@app.route('/profile', methods=['GET'])
+def profile():
+    auth = request.cookies.get('auth')
+    if not auth:
+        return jsonify({'error': 'Log in to create a post'}), 403
+    user = db.client_users.find_one({'auth': auth})
+    if not user:
+        return jsonify({'error': 'Invalid authentication token'}), 400
+    username = escape(user['username'])
+    return redirect(url_for('profile_page', username=username))
+
+@app.route('/profile/<username>', methods=['GET'])
+def profile_page(username):
+    user_posts = db.get_user_auctions(username)
+    auction_items = db.get_user_auctions_wins(username)
+    return render_template('profile.html', username=username, posts=user_posts, wins=auction_items)
+
+
 
 @app.route('/post', methods=['GET', 'POST'])
 def auction_upload():
@@ -169,6 +188,8 @@ def upload_auction():
         if not user:
             flash('Invalid authentication token.')
             return redirect(url_for('login'))
+        
+        username = user['username']
 
         #- process the uploaded file and form data
         title = request.form['title']
@@ -190,7 +211,7 @@ def upload_auction():
 
         #- save the action item to the database
         db.create_auction_item(
-            title, description, starting_price, image_filename, duration)
+            title, description, starting_price, image_filename, duration, username)
 
         #- redirect to the auction house page
         return redirect(url_for('auction_page'))
