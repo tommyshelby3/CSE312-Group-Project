@@ -34,10 +34,11 @@ def index():
     else:
         user = db.client_users.find_one({'auth':auth})
         print(user)
+        winners = list_auction_winners()
         if user is None:
             return redirect(url_for('login'))
         else:
-            return render_template("index.html", username=user['username'])
+            return render_template("index.html", username=user['username'], winners=winners)
         
 
 
@@ -150,6 +151,8 @@ def profile():
 def profile_page(username):
     user_posts = db.get_user_auctions(username)
     auction_items = db.get_user_auctions_wins(username)
+    print(auction_items)
+    print(user_posts)
     return render_template('profile.html', username=username, posts=user_posts, wins=auction_items)
 
 
@@ -273,6 +276,7 @@ def handleMessage(msg):
 @socketio.on('connect', namespace='/auction')
 def handleConnect():
     print('Client connected to regular WS')
+    db.print_auctions()
     emit('my response', {'data': 'Connected'})
 
 
@@ -288,6 +292,7 @@ def broadcast_time_remaining():
                     'time_remaining': str(time_remaining)
                 }, namespace='/auction')
             else:
+                db.auction_items.update_one({'_id': item['_id']}, {'$set': {'winner': item['current_bidder']}})
                 socketio.emit('time_remaining_update', {
                     'auction_id': item['_id'],
                     'time_remaining': str("auction ended")
@@ -308,11 +313,24 @@ def bid_creator():
         return "Please login to view this page", 403
 
 #! ______________________________________ Bid winner ______________________________________ !#
+@socketio.on('request_auction_winners')
 def auction_winners():
     winners = list_auction_winners()
-    print(winners)
-    print("winners", jsonify(winners))
-    return jsonify(winners)
+    return list(winners)
+
+
+@socketio.on('auction_winner')
+def auction_winner():
+    winner = get_auction_winner()
+    print(winner)
+    return winner
+
+@socketio.on('connect')
+def handle_connect():
+    print('Client connected to regular WS')
+    winner = list_auction_winners()
+    print(winner)
+    emit('auction_winner', winner)
 
 
 
@@ -329,9 +347,8 @@ def handle_request_auction_winners():
 
 @socketio.on('auction_ended')
 def handle_auction_ended(auction_id):
-
     winner = get_auction_winner(auction_id)
-
+    print(winner)
     emit('auction_winner', {
         'username': winner['username'],
         'item': winner['item'],

@@ -15,7 +15,6 @@
 <body onload="task()">
     <h1>UniMarket</h1>
     <a href="/auction" class="auction-button">Go to Auction</a>
-    <a href="/bid_creator" class="auction-button">My Created Auctions</a>
     <a href="/profile" class="auction-button">Go to Profile</a>
     <div className="description">
         <p>Welcome to UniMarket {{ username }}! This is a place where you can buy and sell items with other students.</p>
@@ -46,20 +45,29 @@
     <h2>Auction Winners:</h2>
     <div id="auctionWinnersContainer">
         <!-- Auction winners will be dynamically loaded here using WebSockets -->
+        {% for winner in winners %}
+            <div class="winner-entry">
+                <p><strong>{{ winner.username }}</strong> won <em>{{ winner.item }}</em> for ${{ winner.finalPrice }}</p>
+            </div>
+        {% endfor %}
+        
     </div>
     
     <script type="text/javascript">
-        var socket = io.connect('http://' + document.domain + ':' + location.port);
+        var socket = io.connect('http://localhost:8080');
 
         socket.on('connect', function () {
             console.log('Websocket connected!');
         });
 
         socket.on('auction_winner', function (data) {
-            var winnerHTML = '<div class="winner-entry">';
-            winnerHTML += '<p><strong>' + data.username + '</strong> won <em>' + data.item + '</em> for $' + data.finalPrice + '</p>';
-            winnerHTML += '</div>';
-            $('#auctionWinnersContainer').append(winnerHTML);
+            console.log('Auction winner received!');
+            for (var i = 0; i < data.length; i++) {
+                var winnerHTML = '<div class="winner-entry">';
+                winnerHTML += '<p><strong>' + data[i].username + '</strong> won <em>' + data[i].item + '</em> for $' + data[i].finalPrice + '</p>';
+                winnerHTML += '</div>';
+                $('#auctionWinnersContainer').append(winnerHTML);
+            }
         });
     </script>
 

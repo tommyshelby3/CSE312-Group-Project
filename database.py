@@ -35,6 +35,11 @@ def register_user(username, password, salt):
     }
     client_users.insert_one(new_user)
 
+def print_auctions():
+    for auction in auction_items.find({}):
+        print(auction)
+
+
 def create_post(username, title, description):              #! creates a post
     post_data = {
         'username': username,
@@ -110,9 +115,6 @@ def update_bidder(auction_id, bidder, bid_price):
             # Add the previous bidder to the previous_bids list
             auction_items.update_one({'_id': auction_id}, {'$push': {'previous_bids': {'bidder': prev_bidder, 'price': prev_price}}})
         
-        else:
-            # Add the starting price to the previous_bids list
-            auction_items.update_one({'_id': auction_id}, {'$push': {'previous_bids': {'bidder': 'Starting Price', 'price': prev_price}}})
 
         # Update the current bidder and the current price, regardless of whether there was a previous bidder
         auction_items.update_one({'_id': auction_id}, {'$set': {'current_bidder': bidder, 'price': bid_price}})
@@ -147,16 +149,7 @@ def get_auction_items():
 
 def get_auction_winner(auction_id):
     #- Retrieve the auction item using its ID
-    auction_item = dict(list[auction_items.find_one({'_id': auction_id})])
-    if auction_item and 'winner' in auction_item:
-        return {
-            'auction_id': auction_id,
-            'username': auction_item['winner'],
-            'item': auction_item['title'],
-            'finalPrice': auction_item['price']
-        }
-    else:
-        return None
+    auction_item = auction_items.find_one({'_id': auction_id})
 
 
 

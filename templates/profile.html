@@ -3,6 +3,7 @@
 <html>
     <head>
         <link rel="stylesheet" href="{{ url_for('static', filename='profile.css') }}">
+        <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.min.js"></script>
         <title>Profile Page</title>
     </head>
     <body>
@@ -14,7 +15,7 @@
             {% for post in posts %}
                 <li>{{ post.title }}</li>
                 <li>{{ post.description }}</li>
-                <img src="{{ url_for('static', filename='images/' ~ post.imagepath) }}" alt="Auction Item Image">
+                <img src="{{ url_for('static', filename='images/' + post.imagepath) }}" alt="Auction Item Image">
             {% endfor %}
         </ul>
         
@@ -23,7 +24,7 @@
             {% for win in wins %}
                 <li>{{ win.title }}</li>
                 <li>{{ win.description }}</li>
-                <img src="{{ url_for('static', filename='images/' ~ wins.imagepath) }}" alt="Auction Item Image">
+                <img src="{{ url_for('static', filename='images/' + win.imagepath) }}" alt="Auction Item Image">
             {% endfor %}
         </ul>
     </body>
