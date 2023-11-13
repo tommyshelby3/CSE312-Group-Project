@@ -19,6 +19,7 @@ import time
 # from your_auction_model import Auction
 from database import *
 import eventlet
+import hashlib
 
 
 app = Flask(__name__)
@@ -55,6 +56,9 @@ def login():
             return jsonify({'error' : 'invalid username'}), 400
         if bcrypt.hashpw(password.encode('utf-8'), user['salt']) == user['password']:
             auth = secrets.token_hex(16)
+            
+            auth = hashlib.sha256(auth.encode('utf-8')).hexdigest()
+            print(auth)
             db.client_users.update_one({'username':username}, {"$set": {'auth':auth}})
             response = make_response(redirect(url_for('index')))
             response.set_cookie('auth', auth, httponly = True, max_age = 3600)
