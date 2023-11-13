@@ -1,9 +1,21 @@
-const socket = io.connect('http://localhost:8080/auction');
+const socket = io.connect('http://localhost:8080/auction', {transports: ['websocket']});
 
-socket.addEventListener('open', (event) => {
+console.log("Socket:", socket);
+
+socket.addEventListener('open', () => {
     console.log('WebSocket connection established');
 });
 
+socket.on('connect', function() {
+    console.log("Connected to server");
+});
+
+
+socket.on('my response', function(msg) {
+    console.log("Received message:", msg);
+    socket.emit('my response', {data: 'I\'m connected!'});
+}
+)
 
 socket.on('new_bid', function(data) {
     if (data.auction_id) {
@@ -11,6 +23,7 @@ socket.on('new_bid', function(data) {
         $('#current-price-' + data.auction_id).text(data.new_price);
     }
 });
+
 
 socket.on('error', function(data) {
     if (data.error) {
@@ -20,6 +33,7 @@ socket.on('error', function(data) {
 });
 
 socket.on('time_remaining_update', function(data) {
+    console.log("Time Remaining Update:", data);
     if (data.auction_id) {
         // Update the UI with the new time remaining for the specific auction item
         $('#time-remaining-' + data.auction_id).text(data.time_remaining);
@@ -46,6 +60,7 @@ function bid(auctionId) {
     };
     console.log("Bid Data:", bidData);
     socket.emit('bid', bidData);
+    console.log("TEST");
 }
 
 

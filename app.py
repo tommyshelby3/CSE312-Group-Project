@@ -18,11 +18,12 @@ from threading import Thread
 import time
 # from your_auction_model import Auction
 from database import *
+import eventlet
 
 
 app = Flask(__name__)
 app.config["UPLOAD_FOLDER"] = "./static/images"
-socketio = SocketIO(app)
+socketio = SocketIO(app, async_mode="eventlet", cors_allowed_origins="*")
 
 
 @app.route("/")
@@ -220,10 +221,6 @@ def upload_auction():
         return render_template('upload_auction.html')
 
 
-
-@socketio.on('connect', namespace='/auction')
-def connect():
-    print('Client connected to auction WS')
     
 def upload_auction_item():
     return jsonify({'success': 'Auction item uploaded successfully.'}) 
@@ -244,12 +241,19 @@ def handle_bid(json):
     # Extract bid information from json
     auction_id = int(json['auction_id'])
     bid_amount = json['bid_amount']
+
+    username = user['username']
+    auctionCreator = db.auction_items.find_one({'_id': int(auction_id)})['creator_username']
+    if username == auctionCreator:
+        emit('error', {'error': 'You cannot bid on your own auction'})
+        return
     # Fetch the auction item
     print(db.auction_items)
     auction_item = db.auction_items.find_one({'_id': int(auction_id)})
     
     # Check if the auction is still active and the bid is valid
     if auction_item and auction_item['end_time'] > datetime.now() and bid_amount > auction_item['price']:
+        print('Bid is valid')
         # Update the bid
         db.update_bidder(auction_id, user['username'], bid_amount)
         # Emit the new bid to all clients
@@ -257,9 +261,6 @@ def handle_bid(json):
     else:
         emit('error', {'error': 'Bid is not valid or auction has ended'}, namespace='/auction')
 
-@socketio.on('disconnect', namespace='/auction')
-def disconnect():
-    print('Client disconnected')   
     
     
 #Websocket for Auction
@@ -268,22 +269,15 @@ def handleMessage(msg):
     print('Message: ' + msg)
     send(msg, broadcast=True)
 
-@socketio.on('json')
-def handleJson(json):
-    print('json: ' + str(json))
-    send(json, broadcast=True)
 
-@socketio.on('my event')
-def handleMyEvent(json):
-    print('my event: ' + str(json))
-    send(json, broadcast=True)
-
-@socketio.on('connect')
+@socketio.on('connect', namespace='/auction')
 def handleConnect():
     print('Client connected to regular WS')
+    emit('my response', {'data': 'Connected'})
 
 
 def broadcast_time_remaining():
+    print('Starting background thread')
     while True:
         auction_items = db.get_auction_items()
         for item in auction_items:
@@ -298,11 +292,9 @@ def broadcast_time_remaining():
                     'auction_id': item['_id'],
                     'time_remaining': str("auction ended")
                 }, namespace='/auction')
-        time.sleep(1)  # Update every minute, adjust as needed
+        eventlet.sleep(1)  # Update every minute, adjust as needed
 
-# Start the background thread
-thread = Thread(target=broadcast_time_remaining)
-thread.start()
+
 
 #! ______________________________________ Bid creator ______________________________________ !#
 
@@ -326,6 +318,7 @@ def auction_winners():
 
 @socketio.on('request_auction_winners')
 def handle_request_auction_winners():
+    print('Client requested auction winners')
     auction_items = get_auction_items()
     for item in auction_items:
         if item['end_time'] < datetime.now():
@@ -351,7 +344,8 @@ def emit_auction_winner(auction_id):
     if winner_details:
         emit('auction_winner', winner_details, broadcast=True)
 
+
 if __name__ == "__main__":
     app.secret_key = 'super secret key'
-    app.run(host="0.0.0.0", port=8080, debug=True)
-    socketio.run(app)
+    socketio.start_background_task(broadcast_time_remaining)
+    socketio.run(app,host="0.0.0.0", port=8080, debug=True, use_reloader=False )

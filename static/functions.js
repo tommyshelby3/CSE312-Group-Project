@@ -42,7 +42,7 @@ function task() {
 const messages = document.getElementById('messages');
 const messageForm = document.getElementById('message-form');
 const messageInput = document.getElementById('message-input');
-const socket = new WebSocket('ws://localhost:8080');
+const socket = io.connect('http://localhost:8080');
 
 socket.addEventListener('open', (event) => {
     console.log('WebSocket connection established');
