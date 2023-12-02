@@ -64,6 +64,27 @@ function bid(auctionId) {
 }
 
 
+socket.on('update_items', function(data) {
+    console.log("Update Items:", data);
+    var itemsHtml = '';
+    data.auction_items.forEach(function(item) {
+        itemsHtml += `
+            <div class="auction-item">
+                <h3>${item.title}</h3>
+                <p>${item.description}</p>
+                <img src="/static/images/${item.imagepath}" alt="Auction Item Image">
+                <p>Current Price: $<span id="current-price-${item._id}">${item.price}</span></p>
+                <p>Auction duration: ${item.duration}</p>
+                <input type="number" id="bid-input-${item._id}" min="1" step="0.01" placeholder="Enter bid amount">
+                <button class="btn btn-primary" onclick="bid('${item._id}')">Bid</button>
+                <p>Time Remaining: <span id="time-remaining-${item._id}">calculating...</span></p>
+            </div>`;
+    });
+    document.getElementById('auction-items').innerHTML = itemsHtml;
+});
+
+
+
 //! ______________________________  Auction _______________________________
 $(document).ready(function() {
     // Ensure the bid function is accessible from any relevant event handlers

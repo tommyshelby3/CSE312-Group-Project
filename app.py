@@ -136,6 +136,17 @@ def update_like(post_id):
 def auction_page():
     if request.method == 'GET':
         auction_items = db.get_auction_items()
+        list_auction = []
+        for item in auction_items:
+            socket_auction = {
+                'title': item['title'],
+                'description': item['description'],
+                'price': item['price'],
+                'imagepath': item['imagepath'],
+                'duration': item['duration'],
+            }
+            list_auction.append(socket_auction)
+        socketio.emit('update_items', list_auction, namespace='/auction')
         return render_template('auction.html', auction_items=auction_items)
     elif request.method == 'POST':
         return redirect(url_for('post'))
@@ -222,6 +233,7 @@ def upload_auction():
             title, description, starting_price, image_filename, duration, username)
 
         #- redirect to the auction house page
+        socketio.emit('auction_items', db.get_auction_items())
         return redirect(url_for('auction_page'))
     else:
         #- If it's a GET request, just render the upload auction form
