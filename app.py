@@ -427,4 +427,4 @@ def emit_auction_winner(auction_id):
 if __name__ == "__main__":
     app.secret_key = "super secret key"
     socketio.start_background_task(broadcast_time_remaining)
-    socketio.run(app, host="127.0.0.1", port=8080, debug=True, use_reloader=False)
+    socketio.run(app, host="0.0.0.0", port=8080, debug=True, use_reloader=False)
