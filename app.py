@@ -41,31 +41,45 @@ socketio = SocketIO(app, async_mode="eventlet", cors_allowed_origins="*")
 
 # Initialize Flask-Limiter
 limiter = Limiter(
-    app,
+    app=app,
     key_func=get_remote_address,
-    default_limits=[],  # Disable global limits
+    default_limits=[]  # Disable global limits
 )
-
+# This dictionary will keep track of blocked IPs with expiration times
 blocked_ips = {}
 
+@app.before_request
+def check_ip_block():
+    # Get the requester's IP address
+    ip = get_remote_address()
+
+    # Check if the IP is blocked
+    if is_ip_blocked(ip):
+        # If blocked, return a custom 429 response
+        return jsonify(error="Too Many Requests", message="Your IP is temporarily blocked due to excessive requests."), 429
+    # If not blocked, proceed with the request
 
 def is_ip_blocked(ip):
     if ip in blocked_ips:
         block_time = blocked_ips[ip]
         if datetime.now() < block_time:
             return True
+    # If the block has expired, remove the IP from the blocked list
+    blocked_ips.pop(ip, None)  # Removes the IP if it's present, does nothing otherwise
     return False
 
 
 def block_ip(ip, duration=30):
+    # Block the IP for the given duration (in seconds)
     blocked_ips[ip] = datetime.now() + timedelta(seconds=duration)
 
 
 @app.errorhandler(429)
-@limiter.limit("50 per 10 seconds")
 def ratelimit_handler(e):
+    ip = get_remote_address()
+    block_ip(ip, duration=30)  # Block the IP for 30 seconds
     return jsonify(
-        error="Too Many Requests", message="You have exceeded the rate limit."
+        error="Too Many Requests", message="You have exceeded the rate limit. Please wait 30 seconds before trying again."
     ), 429
 
 
