@@ -19,7 +19,7 @@ from flask_socketio import SocketIO
 from flask_socketio import send, emit, join_room, leave_room
 from flask import Blueprint, render_template, session
 from flask_socketio import SocketIO, emit
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask_login import current_user
 from werkzeug.utils import secure_filename
 import auction
@@ -32,14 +32,45 @@ from database import *
 import eventlet
 import hashlib
 import requests
-
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 
 app = Flask(__name__)
 app.config["UPLOAD_FOLDER"] = "./static/images"
 socketio = SocketIO(app, async_mode="eventlet", cors_allowed_origins="*")
 
+# Initialize Flask-Limiter
+limiter = Limiter(
+    app,
+    key_func=get_remote_address,
+    default_limits=[],  # Disable global limits
+)
+
+blocked_ips = {}
+
+
+def is_ip_blocked(ip):
+    if ip in blocked_ips:
+        block_time = blocked_ips[ip]
+        if datetime.now() < block_time:
+            return True
+    return False
+
+
+def block_ip(ip, duration=30):
+    blocked_ips[ip] = datetime.now() + timedelta(seconds=duration)
+
+
+@app.errorhandler(429)
+@limiter.limit("50 per 10 seconds")
+def ratelimit_handler(e):
+    return jsonify(
+        error="Too Many Requests", message="You have exceeded the rate limit."
+    ), 429
+
 
 @app.route("/")
+@limiter.limit("50 per 10 seconds")
 def index():
     auth = request.cookies.get("auth")
     if auth is None:
@@ -57,6 +88,7 @@ def index():
 
 
 @app.route("/login", methods=["GET", "POST"])
+@limiter.limit("50 per 10 seconds")
 def login():
     if request.method == "GET":
         return render_template("login.html")
@@ -81,6 +113,7 @@ def login():
 
 
 @app.route("/register", methods=["GET", "POST"])
+@limiter.limit("50 per 10 seconds")
 def register():
     if request.method == "GET":
         return render_template("register.html")
@@ -100,6 +133,7 @@ def register():
 
 
 @app.route("/post", methods=["POST"])
+@limiter.limit("50 per 10 seconds")
 def create_post_route():
     auth = request.cookies.get("auth")
     if not auth:
@@ -115,12 +149,14 @@ def create_post_route():
 
 
 @app.route("/posts", methods=["GET"])
+@limiter.limit("50 per 10 seconds")
 def fetch_posts():
     posts = get_posts()  #! gets all posts
     return jsonify(posts), 200
 
 
 @app.route("/posts/like/<int:post_id>", methods=["POST"])
+@limiter.limit("50 per 10 seconds")
 def update_like(post_id):
     auth = request.cookies.get("auth")
     if not auth:
@@ -156,6 +192,7 @@ def update_like(post_id):
 
 
 @app.route("/auction", methods=["GET", "POST"])
+@limiter.limit("50 per 10 seconds")
 def auction_page():
     if request.method == "GET":
         auction_items = db.get_auction_items()
@@ -176,6 +213,7 @@ def auction_page():
 
 
 @app.route("/profile", methods=["GET"])
+@limiter.limit("50 per 10 seconds")
 def profile():
     auth = request.cookies.get("auth")
     if not auth:
@@ -188,6 +226,7 @@ def profile():
 
 
 @app.route("/profile/<username>", methods=["GET"])
+@limiter.limit("50 per 10 seconds")
 def profile_page(username):
     user_posts = db.get_user_auctions(username)
     auction_items = db.get_user_auctions_wins(username)
@@ -199,6 +238,7 @@ def profile_page(username):
 
 
 @app.route("/post", methods=["GET", "POST"])
+@limiter.limit("50 per 10 seconds")
 def auction_upload():
     if request.method == "GET":
         return render_template("post.html")
@@ -213,6 +253,7 @@ def auction_upload():
 
 
 @app.route("/auctions/create", methods=["POST"])
+@limiter.limit("50 per 10 seconds")
 def create_auction():
     auctionItem = auction.Auction(
         request.form["title"], request.form["description"], request.form["price"], ""
@@ -224,6 +265,7 @@ def create_auction():
 
 
 @app.route("/upload_auction", methods=["GET", "POST"])
+@limiter.limit("50 per 10 seconds")
 def upload_auction():
     if request.method == "POST":
         # - check if user is logged in
@@ -272,6 +314,7 @@ def upload_auction_item():
 
 
 @socketio.on("bid", namespace="/auction")
+@limiter.limit("50 per 10 seconds")
 def handle_bid(json):
     # Authentication check
     auth = request.cookies.get("auth")
@@ -324,12 +367,14 @@ def handle_bid(json):
 
 # Websocket for Auction
 @socketio.on("message")
+@limiter.limit("50 per 10 seconds")
 def handleMessage(msg):
     print("Message: " + msg)
     send(msg, broadcast=True)
 
 
 @socketio.on("connect", namespace="/auction")
+@limiter.limit("50 per 10 seconds")
 def handleConnect():
     print("Client connected to regular WS")
     db.print_auctions()
@@ -364,6 +409,7 @@ def broadcast_time_remaining():
 
 
 @app.route("/bid_creator")
+@limiter.limit("50 per 10 seconds")
 def bid_creator():
     if "username" in session:
         user_auctions = get_user_auctions(session["username"])
@@ -374,12 +420,14 @@ def bid_creator():
 
 #! ______________________________________ Bid winner ______________________________________ !#
 @socketio.on("request_auction_winners")
+@limiter.limit("50 per 10 seconds")
 def auction_winners():
     winners = list_auction_winners()
     return list(winners)
 
 
 @socketio.on("auction_winner")
+@limiter.limit("50 per 10 seconds")
 def auction_winner():
     winner = get_auction_winner()
     print(winner)
@@ -387,6 +435,7 @@ def auction_winner():
 
 
 @socketio.on("connect")
+@limiter.limit("50 per 10 seconds")
 def handle_connect():
     print("Client connected to regular WS")
     winner = list_auction_winners()
@@ -395,6 +444,7 @@ def handle_connect():
 
 
 @socketio.on("request_auction_winners")
+@limiter.limit("50 per 10 seconds")
 def handle_request_auction_winners():
     print("Client requested auction winners")
     auction_items = get_auction_items()
@@ -406,6 +456,7 @@ def handle_request_auction_winners():
 
 
 @socketio.on("auction_ended")
+@limiter.limit("50 per 10 seconds")
 def handle_auction_ended(auction_id):
     winner = get_auction_winner(auction_id)
     print(winner)
