@@ -1,4 +1,7 @@
-const socket = io.connect('http://localhost:8080/auction', {transports: ['websocket']});
+const socket = io.connect('wss://localhost:8080/auction', {
+    transports: ['websocket'],
+    secure: true,
+});
 
 console.log("Socket:", socket);
 
