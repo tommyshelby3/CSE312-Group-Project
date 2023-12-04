@@ -26,6 +26,7 @@ import auction
 import os
 from threading import Thread
 import time
+from flask_mail import Mail, Message
 
 # from your_auction_model import Auction
 from database import *
@@ -38,6 +39,16 @@ from flask_limiter.util import get_remote_address
 app = Flask(__name__)
 app.config["UPLOAD_FOLDER"] = "./static/images"
 socketio = SocketIO(app, async_mode="eventlet", cors_allowed_origins="*")
+
+# Configure Flask-Mail
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USERNAME'] = 'your-email@gmail.com'
+app.config['MAIL_PASSWORD'] = 'your-password'
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USE_SSL'] = False
+mail = Mail(app)
+
 
 # Initialize Flask-Limiter
 limiter = Limiter(
@@ -135,14 +146,46 @@ def register():
         data = request.form
         username = data["username"]
         password = data["password"]
-        if username is None or password is None:
-            return jsonify({"error": "missing username or password"}), 400
+        email = data['email']
+
+        # Basic validation for input
+        if not username or not password or not email:
+            flash('Missing username, password, or email', 'error')
+            return render_template("register.html")
+
+        # Check if username or email already exists
+        # Assuming this function exists in your db module
+        if db.user_exists(username, email):
+            flash('Username or email already exists', 'error')
+            return render_template("register.html")
+
+        # Password hashing
         salt = bcrypt.gensalt()
         hashpassword = bcrypt.hashpw(password.encode("utf-8"), salt)
-        db.register_user(username, hashpassword, salt)
+
+        # Register user and get verification token
+        token = db.register_user(username, hashpassword, salt, email)
+
+        # Sending verification email
+        msg = Message('Email Verification', sender='your-email@gmail.com', recipients=[email])
+        verify_url = url_for('verify_email', token=token, _external=True)
+        msg.body = f'Please click on the following link to verify your email: {verify_url}'
+        mail.send(msg)
+
+        flash('Please check your email to verify your account', 'info')
+
         return redirect(url_for("index"))
 
 
+
+@app.route('/verify_email/<token>')
+def verify_email(token):
+    if db.verify_email(token):
+        flash('Your email has been verified!', 'success')
+        return redirect(url_for('login'))
+    else:
+        flash('Invalid or expired verification link', 'danger')
+        return redirect(url_for('register'))
 #!__________________________________________ POSTS ____________________________________________!#
 
 

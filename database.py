@@ -25,15 +25,29 @@ def get_next_id():
         client_id.insert_one({'last_id':1})
         return 1
 
-def register_user(username, password, salt):
+def register_user(username, password, salt, email):
+    email_verification_token = secrets.token_urlsafe()  # Generate a unique token
     new_user = {
         'username': username,
         'password': password,
         'salt': salt,
         'auth': None,
-        '_id': get_next_id()
+        '_id': get_next_id(),
+        'email_verified': False,
+        'email_verification_token': email_verification_token,
+        'email': email
     }
     client_users.insert_one(new_user)
+    return email_verification_token
+
+
+def verify_email(token):
+    user = client_users.find_one({'email_verification_token': token})
+    if user:
+        client_users.update_one({'_id': user['_id']}, {
+                                '$set': {'email_verified': True}})
+        return True
+    return False
 
 def print_auctions():
     for auction in auction_items.find({}):
