@@ -186,6 +186,17 @@ def verify_email(token):
     else:
         flash('Invalid or expired verification link', 'danger')
         return redirect(url_for('register'))
+    
+
+@app.route('/resend_verification_email', methods=['POST'])
+def resend_verification_email():
+    email = request.form.get('email')
+    # Logic to resend verification email
+    # ...
+    flash('Verification email resent to ' + email, 'info')
+    return redirect(url_for('profile'))  # Redirect back to the profile page
+
+
 #!__________________________________________ POSTS ____________________________________________!#
 
 

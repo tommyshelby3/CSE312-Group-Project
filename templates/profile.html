@@ -10,6 +10,17 @@
         <h1>Welcome to your profile page!</h1>
         <p>Username: {{ username }}</p>
         
+        <!-- Email Verification Status -->
+        <div id="email-verification">
+            <p>Email: {{ email }} ({{ 'Verified' if email_verified else 'Not Verified' }})</p>
+            {% if not email_verified %}
+            <form action="{{ url_for('resend_verification_email') }}" method="post">
+                <input type="hidden" name="email" value="{{ email }}">
+                <button type="submit">Resend Verification Email</button>
+            </form>
+            {% endif %}
+        </div>
+        
         <h2>Your Auction Posts:</h2>
         <ul>
             {% for post in posts %}
