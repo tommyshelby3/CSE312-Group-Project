@@ -28,6 +28,13 @@ from threading import Thread
 import time
 from flask_mail import Mail, Message
 
+from googleapiclient.discovery import build
+from google_auth_oauthlib.flow import InstalledAppFlow
+from google.auth.transport.requests import Request
+from google.oauth2.credentials import Credentials
+from email.mime.text import MIMEText
+import base64
+
 # from your_auction_model import Auction
 from database import *
 import eventlet
@@ -40,14 +47,64 @@ app = Flask(__name__)
 app.config["UPLOAD_FOLDER"] = "./static/images"
 socketio = SocketIO(app, async_mode="eventlet", cors_allowed_origins="*")
 
-# Configure Flask-Mail
-app.config['MAIL_SERVER'] = 'smtp.gmail.com'
-app.config['MAIL_PORT'] = 587
-app.config['MAIL_USERNAME'] = 'your-email@gmail.com'
-app.config['MAIL_PASSWORD'] = 'your-password'
-app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USE_SSL'] = False
-mail = Mail(app)
+SCOPES = ['https://www.googleapis.com/auth/gmail.send']
+
+
+# Define the scope of the application
+SCOPES = ['https://www.googleapis.com/auth/gmail.send']
+
+
+def gmail_send_message(sender, to, subject, body_text):
+    """Send an email message using the Gmail API.
+
+    Args:
+        sender: Email address of the sender.
+        to: Email address of the receiver.
+        subject: The subject of the email message.
+        body_text: The body text of the email message.
+    """
+    creds = None
+
+    token_file = os.environ.get('GMAIL_API_TOKEN')
+    credentials_file = os.environ.get('GMAIL_API_CREDENTIALS')
+
+    if os.path.exists(token_file):
+        creds = Credentials.from_authorized_user_file(token_file, SCOPES)
+    # If there are no (valid) credentials available, let the user log in.
+    if not creds or not creds.valid:
+        if creds and creds.expired and creds.refresh_token:
+            creds.refresh(Request())
+        else:
+            flow = InstalledAppFlow.from_client_secrets_file(
+                credentials_file, SCOPES)
+            creds = flow.run_local_server(port=0)
+        # Save the credentials for the next run
+        with open(token_file, 'w') as token:
+            token.write(creds.to_json())
+
+    try:
+        service = build('gmail', 'v1', credentials=creds)
+
+        # Create a MIMEText object for the email message
+        message = MIMEText(body_text)
+        message['to'] = to
+        message['from'] = sender
+        message['subject'] = subject
+        # Encode the message string into bytes and then base64 for the Gmail API
+        encoded_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
+
+        # Create the message body for the API request
+        create_message = {'raw': encoded_message}
+
+        # Call the Gmail API to send the email
+        send_message = service.users().messages().send(
+            userId="me", body=create_message).execute()
+        print(f"Message Id: {send_message['id']}")
+        return send_message
+    except Exception as error:
+        print(f"An error occurred: {error}")
+        return None
+
 
 
 # Initialize Flask-Limiter
@@ -166,14 +223,15 @@ def register():
         # Register user and get verification token
         token = db.register_user(username, hashpassword, salt, email)
 
-        # Sending verification email
-        msg = Message('Email Verification', sender='your-email@gmail.com', recipients=[email])
+        # Construct the email verification URL
         verify_url = url_for('verify_email', token=token, _external=True)
-        msg.body = f'Please click on the following link to verify your email: {verify_url}'
-        mail.send(msg)
+
+        # Send verification email using Gmail API
+        subject = 'Email Verification'
+        body_text = f'Please click on the following link to verify your email: {verify_url}'
+        gmail_send_message('your-email@gmail.com', email, subject, body_text)
 
         flash('Please check your email to verify your account', 'info')
-
         return redirect(url_for("index"))
 
 
@@ -191,8 +249,6 @@ def verify_email(token):
 @app.route('/resend_verification_email', methods=['POST'])
 def resend_verification_email():
     email = request.form.get('email')
-    # Logic to resend verification email
-    # ...
     flash('Verification email resent to ' + email, 'info')
     return redirect(url_for('profile'))  # Redirect back to the profile page
 
