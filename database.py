@@ -166,4 +166,8 @@ def get_auction_winner(auction_id):
     auction_item = auction_items.find_one({'_id': auction_id})
 
 
-
+def user_exists(username, email): 
+    if client_users.find_one({"email":email}):
+        return True
+    else:
+        return False

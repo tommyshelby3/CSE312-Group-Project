@@ -6,3 +6,8 @@ flask_login
 eventlet
 requests
 flask-limiter
+flask_mail
+google-api-python-client
+google-auth-oauthlib 
+google-auth 
+python-dotenv

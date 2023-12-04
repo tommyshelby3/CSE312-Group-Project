@@ -32,9 +32,10 @@ from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
+import googleapiclient.errors
 from email.mime.text import MIMEText
 import base64
-
+from dotenv import load_dotenv
 # from your_auction_model import Auction
 from database import *
 import eventlet
@@ -47,11 +48,16 @@ app = Flask(__name__)
 app.config["UPLOAD_FOLDER"] = "./static/images"
 socketio = SocketIO(app, async_mode="eventlet", cors_allowed_origins="*")
 
-SCOPES = ['https://www.googleapis.com/auth/gmail.send']
-
-
 # Define the scope of the application
-SCOPES = ['https://www.googleapis.com/auth/gmail.send']
+scopes = ['https://www.googleapis.com/auth/gmail.send']
+# Disable OAuthlib's HTTPS verification when running locally.
+os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
+
+client_id = os.environ.get('GMAIL_API_CLIENT_ID')
+client_secret = os.environ.get('GMAIL_API_CLIENT_SECRET')
+
+
+HOSTNAME = "http://localhost:8080"
 
 
 def gmail_send_message(sender, to, subject, body_text):
@@ -69,14 +75,14 @@ def gmail_send_message(sender, to, subject, body_text):
     credentials_file = os.environ.get('GMAIL_API_CREDENTIALS')
 
     if os.path.exists(token_file):
-        creds = Credentials.from_authorized_user_file(token_file, SCOPES)
+        creds = Credentials.from_authorized_user_file(token_file, scopes)
     # If there are no (valid) credentials available, let the user log in.
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
             flow = InstalledAppFlow.from_client_secrets_file(
-                credentials_file, SCOPES)
+                credentials_file, scopes=scopes )
             creds = flow.run_local_server(port=0)
         # Save the credentials for the next run
         with open(token_file, 'w') as token:
@@ -225,22 +231,34 @@ def register():
 
         # Construct the email verification URL
         verify_url = url_for('verify_email', token=token, _external=True)
+        print(verify_url)
 
         # Send verification email using Gmail API
         subject = 'Email Verification'
         body_text = f'Please click on the following link to verify your email: {verify_url}'
-        gmail_send_message('your-email@gmail.com', email, subject, body_text)
+        gmail_send_message('bot.app.board@gmail.com', email, subject, body_text)
 
         flash('Please check your email to verify your account', 'info')
-        return redirect(url_for("index"))
+        return redirect(url_for("profile"))
 
-
+@app.route("/verify_email", methods=["GET"])
+@limiter.limit("50 per 10 seconds")
+def verify_email_page():
+    auth = request.cookies.get("auth")
+    if auth is None:
+        return redirect(url_for("login"))
+    else:
+        user = db.client_users.find_one({"auth": auth})
+        if user is None:
+            return redirect(url_for("login"))
+        db.client_users.update_one({"username": user["username"]}, {"$set": {"email_verified": True}})
+        return render_template("verify_email.html")
 
 @app.route('/verify_email/<token>')
 def verify_email(token):
     if db.verify_email(token):
         flash('Your email has been verified!', 'success')
-        return redirect(url_for('login'))
+        return redirect(url_for('profile'))
     else:
         flash('Invalid or expired verification link', 'danger')
         return redirect(url_for('register'))
